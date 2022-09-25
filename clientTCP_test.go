@@ -5,6 +5,8 @@ import (
         "fmt"
         "net"
         "os"
+
+		"golang.org/x/term"
 )
 
 func main() {
@@ -54,31 +56,48 @@ func Move(c net.Conn){
 	fmt.Print("You can move div with : z[up] | q[left] | [d]right | s[down] or use e[exit]"+"\n")
 	
 	for i := true; i;{
-		
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print(">> ")
-		text, _ := reader.ReadString('\n')
 
-		if string(text[0]) == "e"{
+		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+
+		fmt.Println(oldState)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+		b := make([]byte, 1)
+		_, err = os.Stdin.Read(b)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if string(b) == "e"{
 			Menu(c)
+			fmt.Print("The keys " + string(b) + "\n")
 			i = false
 		}
-		if string(text[0]) == "s"{
+		if string(b) == "s"{
 			top += 10
 			command = "/marginTop " + IntegerToString(top)
 			fmt.Fprintf(c, command+"\n")
-		}else if string(text[0]) == "z"{
+			fmt.Print("The keys " + string(b) + "\n")
+		}else if string(b) == "z"{
 			top -= 10
 			command = "/marginTop " + IntegerToString(top)
 			fmt.Fprintf(c, command+"\n")
-		}else if string(text[0]) == "d"{
+			fmt.Print("The keys " + string(b) + "\n")
+		}else if string(b) == "d"{
 			left += 20
 			command = "/marginLeft " + IntegerToString(top)
 			fmt.Fprintf(c, command+"\n")
-		}else if string(text[0]) == "q"{
+			fmt.Print("The keys " + string(b) + "\n")
+		}else if string(b) == "q"{
 			left -= 20
 			command = "/marginLeft " + IntegerToString(top)
 			fmt.Fprintf(c, command+"\n")
+			fmt.Print("The keys " + string(b) + "\n")
 		}
     }
 	
@@ -93,17 +112,27 @@ func Menu(c net.Conn){
 
 	for i := true; i;{
 
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print(">> ")
-		text, _ := reader.ReadString('\n')
+		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer term.Restore(int(os.Stdin.Fd()), oldState)
+	
+		b := make([]byte, 1)
+		_, err = os.Stdin.Read(b)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-		if string(text[0]) == "1" {
+		if string(b) == "1" {
 			Move(c)
 			i = false
-		} else if string(text[0]) == "2" {
+		} else if string(b) == "2" {
 			Config(c)
 			i = false
-		} else if string(text[0]) == "3" {
+		} else if string(b) == "3" {
 			i = false
 		} else {
 			fmt.Print("Please choose a valide option.." + "\n")
